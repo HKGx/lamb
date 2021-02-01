@@ -73,7 +73,7 @@ class PuzzlesCommand extends Command {
 
     const bestMove = puzzle.moves.substring(5, 9);
 
-    if (message.content === bestMove) {
+    if (message.content.toLowerCase() === bestMove) {
       await dm.send(
         `You've guessed correctly with \`${bestMove}\`! It was your ${guess.guesses}. try!`
       );
