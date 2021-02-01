@@ -17,7 +17,7 @@ import { endsWith, getFiles } from "./util";
 
 export class Bot extends discord.Client {
   private $env: Env;
-  private $parsePrefix = str("==");
+  private readonly $parsePrefix;
   private $parseCommand!: Parser<Command>;
   private $parseMention!: Parser<string>;
   commands: Command[] = [];
@@ -29,7 +29,7 @@ export class Bot extends discord.Client {
       },
     });
     this.$env = env;
-
+    this.$parsePrefix = str(env.LAMB_PREFIX);
     this.loadCommands();
 
     super.on("message", this.handleMessage);
