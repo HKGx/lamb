@@ -1,0 +1,3 @@
+# lamb
+
+A discord bot
