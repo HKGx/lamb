@@ -10,7 +10,8 @@ FROM node:alpine
 WORKDIR /app
 ENV NODE_ENV=production
 
-COPY ["package.json", "package-lock.json*", "npm-shrinkwrap.json*", "data/", "./"]
+COPY ["package.json", "package-lock.json*", "npm-shrinkwrap.json*", "./"]
+COPY ["data", "./data"]
 
 RUN npm ci --quiet --only=production 
 
