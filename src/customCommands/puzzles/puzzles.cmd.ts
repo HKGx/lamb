@@ -77,7 +77,7 @@ class PuzzlesCommand extends Command {
       await dm.send(
         `You've guessed correctly with \`${bestMove}\`! It was your ${guess.guesses}. try!`
       );
-      await guess.update({ $set: { guessed: true } });
+      await guess.updateOne({ $set: { guessed: true } });
     } else {
       if (guess.guesses === 3) {
         await dm.send("Incorrect guess! You've run out of your guesses.");
@@ -89,7 +89,7 @@ class PuzzlesCommand extends Command {
           } left`
         );
       }
-      await guess.update({ $inc: { guesses: 1 } });
+      await guess.updateOne({ $inc: { guesses: 1 } });
     }
   };
 }
