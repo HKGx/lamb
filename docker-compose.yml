@@ -1,4 +1,4 @@
-version: '3.4'
+version: "3.4"
 
 services:
   mongo:
@@ -6,6 +6,7 @@ services:
     restart: always
     ports:
       - 27017:27017
+    env_file: .env
     environment:
       - MONGO_INITDB_DATABASE=lamb
     volumes:
@@ -15,18 +16,8 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile
-    env_file: ./.env
+    env_file: .env
     environment:
       NODE_ENV: production
-    links:
-      - mongo
     depends_on:
       - mongo
-  mongo_express:
-    image: mongo-express
-    container_name: mongo_express
-    depends_on:
-      - 'mongo'
-    ports:
-      - '8081:8081'
-    restart: always
