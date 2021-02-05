@@ -9,6 +9,7 @@
   "license": "MIT",
   "keywords": [],
   "scripts": {
+    "prestart": "npm run build",
     "start": "node build/main/index.js",
     "build": "run-p build:*",
     "build:main": "tsc -p tsconfig.json",
