@@ -3,21 +3,7 @@ import { MessageEmbed } from "discord.js";
 import { argument, Command, Context, stringConverter } from "../../commands";
 import puzzleModel from "../../models/puzzle.model";
 
-import puzzlesCmd from "./puzzles.cmd";
-
-export function puzzleCheck(ctx: Context) {
-  const roles = [
-    "412193755286732800",
-    "303943612784181248",
-    "422408722107596811",
-  ];
-  if (!ctx.message.member) {
-    return Promise.resolve(false);
-  }
-  const cache = ctx.message.member.roles.cache;
-  const rs = roles.map(cache.get.bind(cache)).some((role) => role);
-  return Promise.resolve(rs);
-}
+import puzzlesCmd, { puzzleCheck } from "./puzzles.cmd";
 
 class PuzzleGetCommand extends Command {
   name = "get";
@@ -44,3 +30,5 @@ class PuzzleGetCommand extends Command {
 }
 
 export default new PuzzleGetCommand();
+
+export { puzzleCheck };
