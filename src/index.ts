@@ -17,6 +17,9 @@ if (env instanceof Error) {
     useNewUrlParser: true,
     useUnifiedTopology: true,
     useFindAndModify: false,
+    dbName: "lamb",
+    user: env.LAMB_MONGO_USER,
+    pass: env.LAMB_MONGO_PASSWORD,
   });
 
   const bot = new Bot(env);
