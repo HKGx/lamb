@@ -4,7 +4,7 @@ services:
   mongo:
     image: mongo
     restart: always
-    env_file: .env
+    env_file: mongo.env
     environment:
       - MONGO_INITDB_DATABASE=lamb
     command: [--auth]
@@ -18,7 +18,7 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile
-    env_file: .env
+    env_file: lamb.env
     environment:
       NODE_ENV: production
     depends_on:
