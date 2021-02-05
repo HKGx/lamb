@@ -5,6 +5,8 @@ import puzzleModel from "../../models/puzzle.model";
 
 import puzzlesCmd, { puzzleCheck } from "./puzzles.cmd";
 
+export { puzzleCheck };
+
 class PuzzleGetCommand extends Command {
   name = "get";
   $resolve = puzzlesCmd.derive(this);
@@ -30,5 +32,3 @@ class PuzzleGetCommand extends Command {
 }
 
 export default new PuzzleGetCommand();
-
-export { puzzleCheck };
