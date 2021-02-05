@@ -91,3 +91,5 @@ typings/
 build/
 
 mongodata/
+
+mongo-init.js
