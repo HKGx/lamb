@@ -40,7 +40,7 @@ export class Bot extends discord.Client {
     const files = await getFiles(`${__dirname}/customCommands/`);
     const filtered = files
       .map((f) => f.path)
-      .filter((f) => endsWith(f, ".cmd.js"));
+      .filter((f) => endsWith(f, ".cmd.ts"));
 
     const modules = await Promise.all(filtered.map((x) => import(x)));
     const commands = modules

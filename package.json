@@ -9,14 +9,14 @@
   "license": "MIT",
   "keywords": [],
   "scripts": {
-    "start": "node build/main/index.js",
+    "start": "ts-node src/index.ts",
     "build": "run-p build:*",
     "build:main": "tsc -p tsconfig.json",
     "build:module": "tsc -p tsconfig.module.json",
     "fix": "run-s fix:*",
     "fix:prettier": "prettier \"src/**/*.ts\" --write",
     "fix:lint": "eslint src --ext .ts --fix",
-    "test": "run-s build test:*",
+    "test": "run-s test:*",
     "test:lint": "eslint src --ext .ts",
     "test:prettier": "prettier \"src/**/*.ts\" --list-different",
     "test:spelling": "cspell \"{README.md,.github/*.md,src/**/*.ts}\"",
@@ -24,10 +24,9 @@
     "check-cli": "run-s test diff-integration-tests check-integration-tests",
     "check-integration-tests": "run-s check-integration-test:*",
     "diff-integration-tests": "mkdir -p diff && rm -rf diff/test && cp -r test diff/test && rm -rf diff/test/test-*/.git && cd diff && git init --quiet && git add -A && git commit --quiet --no-verify --allow-empty -m 'WIP' && echo '\\n\\nCommitted most recent integration test output in the \"diff\" directory. Review the changes with \"cd diff && git diff HEAD\" or your preferred git diff viewer.'",
-    "watch:start": "nodemon -q",
-    "watch:build": "tsc -p tsconfig.json -w",
+    "watch:start": "ts-node-dev --quiet src/index.ts",
     "watch:test": "nyc --silent ava --watch",
-    "cov": "run-s build test:unit cov:html cov:lcov && open-cli coverage/index.html",
+    "cov": "run-s test:unit cov:html cov:lcov && open-cli coverage/index.html",
     "cov:html": "nyc report --reporter=html",
     "cov:lcov": "nyc report --reporter=lcov",
     "cov:send": "run-s cov:lcov && codecov",
@@ -52,10 +51,9 @@
     "nodemon": "^2.0.7",
     "reflect-metadata": "^0.1.13",
     "source-map-support": "^0.5.19",
-    "typescript": "^4.1.3"
+    "ts-node": "^9.1.1"
   },
   "devDependencies": {
-    "@ava/typescript": "^1.1.1",
     "@istanbuljs/nyc-config-typescript": "^1.0.1",
     "@types/mongoose": "^5.10.3",
     "@types/node": "^14.14.22",
@@ -76,8 +74,9 @@
     "open-cli": "^6.0.1",
     "prettier": "^2.1.1",
     "standard-version": "^9.0.0",
-    "ts-node": "^9.0.0",
-    "typedoc": "^0.19.0"
+    "ts-node-dev": "^1.1.1",
+    "typedoc": "^0.19.0",
+    "typescript": "^4.1.3"
   },
   "files": [
     "build/main",
@@ -91,13 +90,9 @@
   "ava": {
     "failFast": true,
     "timeout": "60s",
-    "typescript": {
-      "rewritePaths": {
-        "src/": "build/main/"
-      }
-    },
-    "files": [
-      "!build/module/**"
+    "extensions": ["ts"],
+    "require": [
+      "ts-node/register"
     ]
   },
   "config": {

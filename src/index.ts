@@ -17,6 +17,7 @@ if (env instanceof Error) {
     useNewUrlParser: true,
     useUnifiedTopology: true,
     useFindAndModify: false,
+    authSource: "lamb",
     dbName: "lamb",
     user: env.LAMB_MONGO_USER,
     pass: env.LAMB_MONGO_PASSWORD,
