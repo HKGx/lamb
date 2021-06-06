@@ -12,7 +12,7 @@ if (env instanceof Error) {
   throw env;
 }
 
-(async function name(env: Env) {
+(async function (env: Env) {
   await mongoose.connect(env.LAMB_MONGO_URL, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
