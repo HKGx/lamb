@@ -1,20 +1,10 @@
-FROM node:alpine as base
-WORKDIR /app
-COPY ["package.json", "package-lock.json", "npm-shrinkwrap.json*", "tsconfig.json", "tsconfig.module.json", "./"]
 
-FROM base AS dev
-COPY ./src ./src
-RUN npm ci --quiet && npm run build:main
-
-FROM base as prod
-
-WORKDIR /app
+FROM node:16-alpine as build
+COPY ["package.json", "package-lock.json", "npm-shrinkwrap.json*", "tsconfig.json", "tsconfig.module.json", "app/"]
+WORKDIR /app/
+RUN npm ci -q
+FROM build as prod
+COPY src/ ./src
+COPY data/ ./data
 ENV NODE_ENV=production
-
-COPY ["data", "./data"]
-
-RUN npm ci --quiet --only=production 
-
-COPY --from=dev /app/build ./build
-
 CMD ["npm", "start"]

@@ -1,25 +1,32 @@
-version: "3.4"
+version: "3.9"
 
 services:
   mongo:
     image: mongo
-    restart: always
-    env_file: mongo.env
+    restart: unless-stopped
+    env_file: .mongo.env
     environment:
       - MONGO_INITDB_DATABASE=lamb
     command: [--auth]
     ports:
-      - 127.0.0.1:27017:27017
+      - 27017:27017
     volumes:
       - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
       - ./mongodata:/data/db
   lamb:
-    image: lamb
-    build:
-      context: .
-      dockerfile: ./Dockerfile
-    env_file: lamb.env
+    build: .
+    env_file: .lamb.env
     environment:
       NODE_ENV: production
     depends_on:
       - mongo
+  lamb-dev:
+    build: .
+    env_file: .lamb.env
+    depends_on:
+      - mongo
+    volumes:
+      - ./src:/app/src
+    profiles:
+      - dev
+    command: npm run watch:dev-docker
