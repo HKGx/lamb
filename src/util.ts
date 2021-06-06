@@ -1,5 +1,7 @@
 import { readdir } from "fs/promises";
 
+import { Util } from "discord.js";
+
 export async function getFiles(path: string) {
   const entries = await readdir(path, { withFileTypes: true });
   const files = entries
@@ -18,3 +20,16 @@ export function endsWith<T extends string, U extends string>(
 ): str is `${T}${U}` {
   return str.endsWith(end);
 }
+
+export function startsWith<T extends string, U extends string>(
+  str: string,
+  start: U
+): str is `${U}${T}` {
+  return str.startsWith(start);
+}
+
+export function sanitize(str: string) {
+  return Util.escapeMarkdown(Util.removeMentions(str));
+}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type Constructor<T> = new (...any: any[]) => T;
