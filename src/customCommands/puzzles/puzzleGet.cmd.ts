@@ -1,6 +1,6 @@
 import { MessageEmbed } from "discord.js";
 
-import { argument, Command, Context, stringConverter } from "../../commands";
+import { Command, Context } from "../../commands";
 import puzzleModel from "../../models/puzzle.model";
 
 import puzzlesCmd, { puzzleCheck } from "./puzzles.cmd";
@@ -10,7 +10,7 @@ export { puzzleCheck };
 class PuzzleGetCommand extends Command {
   name = "get";
   $resolve = puzzlesCmd.derive(this);
-  arguments = [argument("puzzle id", stringConverter)];
+  arguments = [String];
   checks = [puzzleCheck];
   async invoke(ctx: Context, puzzleId: string) {
     const puzzle = await puzzleModel.findById(puzzleId);

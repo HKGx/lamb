@@ -6,7 +6,7 @@ class EventsCommand extends Command {
   aliases = ["eventy"];
   checks = [isOwner];
   async invoke(ctx: Context) {
-    const count = await eventModel.countDocuments({}).exec();
+    const count = await eventModel.estimatedDocumentCount();
     await ctx.reply(`We currently have ${count} events`);
   }
 }

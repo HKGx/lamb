@@ -1,6 +1,6 @@
 import { decode } from "js-base64";
 
-import { argument, Command, Context, stringConverter } from "../../commands";
+import { Command, Context } from "../../commands";
 import puzzleModel from "../../models/puzzle.model";
 
 import { puzzleCheck } from "./puzzleGet.cmd";
@@ -9,7 +9,7 @@ import puzzlesCmd from "./puzzles.cmd";
 class PuzzleAnswerCommand extends Command {
   name = "answer";
   $resolve = puzzlesCmd.derive(this);
-  arguments = [argument("puzzle encoded id", stringConverter)];
+  arguments = [String];
   checks = [puzzleCheck];
   async invoke(ctx: Context, puzzleIdEncoded: string) {
     const decoded = decode(puzzleIdEncoded);

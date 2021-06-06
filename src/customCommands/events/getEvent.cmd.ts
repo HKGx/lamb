@@ -1,12 +1,6 @@
 import { Util } from "discord.js";
 
-import {
-  argument,
-  Command,
-  Context,
-  isOwner,
-  stringConverter,
-} from "../../commands";
+import { Command, Context, isOwner } from "../../commands";
 import Event from "../../models/event.model";
 
 import events from "./events.cmd";
@@ -15,7 +9,7 @@ class EventGetCommand extends Command {
   name = "get";
   aliases = ["wez", "weź"];
   $resolve = events.derive(this);
-  arguments = [argument("event name", stringConverter)];
+  arguments = [String];
   checks = [isOwner];
   async invoke(ctx: Context, eventName: string) {
     const name = Util.escapeMarkdown(eventName);
@@ -24,7 +18,7 @@ class EventGetCommand extends Command {
       await ctx.reply(`Nie znaleziono eventu o nazwie: \`${name}\``);
       return;
     }
-    await ctx.reply(`Znaleziono event \`${name}\` with id \`${event.id}\``);
+    await ctx.reply(`Znaleziono event \`${name}\` z id: \`${event.id}\``);
   }
 }
 

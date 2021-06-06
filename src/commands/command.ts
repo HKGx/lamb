@@ -1,29 +1,31 @@
 import { Message, TextChannel } from "discord.js";
 
-import { expectEOF, or } from "./parseCommands";
+import { Constructor } from "../util";
 
-import { any, Bot, left, map, opWs, Parser, seq, str, wrap, ws } from ".";
+import { optional } from "./parseCommands";
 
-class Argument<T> {
-  name: string;
-  parser: Parser<T>;
-  constructor(name: string, parser: Parser<T>) {
-    this.name = name;
-    this.parser = parser;
-  }
-}
-
-const argument = <T>(name: string, parser: Parser<T>) =>
-  new Argument(name, parser);
+import {
+  any,
+  Bot,
+  expectEOF,
+  left,
+  map,
+  opWs,
+  or,
+  Parser,
+  seq,
+  str,
+  ws,
+} from ".";
 
 class Context {
-  readonly client: Bot;
+  readonly bot: Bot;
   readonly message: Message;
   readonly send: TextChannel["send"];
   readonly reply: Message["reply"];
   readonly invokedByMention: boolean;
-  constructor(client: Bot, message: Message) {
-    this.client = client;
+  constructor(bot: Bot, message: Message) {
+    this.bot = bot;
     this.message = message;
     this.send = this.message.channel.send.bind(this.message.channel);
     this.reply = this.message.reply.bind(this.message);
@@ -31,15 +33,31 @@ class Context {
   }
 }
 
+export type ArgumentValue =
+  | Constructor<unknown>
+  | readonly [Constructor<unknown>];
+
+type Argument = { cls: ArgumentValue; optional?: boolean } | ArgumentValue;
+
+const isArgumentWithOptions = (
+  arg: Argument
+): arg is { cls: ArgumentValue; optional?: boolean } => "cls" in arg;
+
+const argValueToConverter = (ctx: Context, argval: ArgumentValue) => {
+  return left(ctx.bot.getConverter(argval).convert(ctx), opWs);
+};
+
+type Alias = string | Parser<string>;
+
 abstract class Command {
   $resolve?: Parser<string>;
   abstract readonly name: string;
-  readonly aliases: (string | Parser<string>)[] = [];
-  readonly arguments: readonly Argument<unknown>[] = [];
+  readonly aliases: readonly Alias[] = [];
+  readonly arguments: readonly Argument[] = [];
   readonly checks: readonly ((ctx: Context) => Promise<boolean>)[] = [];
   $base?: Command;
 
-  public async isExecutionValid(ctx: Context) {
+  public async checksValid(ctx: Context) {
     const checks = await Promise.all(this.checks.map((check) => check(ctx)));
     if (checks.some((check) => !check)) {
       return false;
@@ -68,8 +86,16 @@ abstract class Command {
     return map(this.resolve, () => this);
   }
 
-  get parseArguments() {
-    return seq(...this.arguments.map((a) => wrap(a.parser, opWs)));
+  parseArguments(ctx: Context) {
+    const convertersParsers = this.arguments.map((arg) => {
+      if (isArgumentWithOptions(arg)) {
+        const converter = argValueToConverter(ctx, arg.cls);
+        return arg.optional ? optional(converter) : converter;
+      } else {
+        return argValueToConverter(ctx, arg);
+      }
+    });
+    return seq(...convertersParsers);
   }
 
   derive(command: Command) {
@@ -88,20 +114,4 @@ abstract class Command {
   onMessage: ((message: Message) => Promise<void>) | undefined = undefined;
 }
 
-// TODO: implement a more dynamic way to create commands
-// TODO: using decorators
-// function command<T extends Command>(
-//   target: T,
-//   propertyKey: string,
-//   descriptor: TypedPropertyDescriptor<Command["invoke"]>
-// ) {
-//   console.log("-- target --");
-//   console.log(target);
-//   console.log("-- proertyKey --");
-//   console.log(propertyKey);
-//   console.log("-- descriptor --");
-//   console.log(descriptor);
-//   console.log(descriptor.value?.name);
-// }
-
-export { Command, Context, Argument, argument };
+export { Command, Context };

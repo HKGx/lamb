@@ -37,7 +37,9 @@ class PuzzlesCommand extends Command {
   }
 
   onMessage = async (message: Message) => {
-    const referenced = await message.referencedMessage?.fetch();
+    const referenced = message.reference
+      ? await message.fetchReference()
+      : undefined;
     if (!referenced || referenced.author.id !== message.client.user?.id) {
       return;
     }

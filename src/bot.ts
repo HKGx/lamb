@@ -1,9 +1,12 @@
-import discord, { Message } from "discord.js";
+import discord, { GuildMember, Intents, Message } from "discord.js";
 
 import {
   any,
+  ArgumentValue,
   Command,
   Context,
+  Converter,
+  ConverterError,
   left,
   opWs,
   or,
@@ -12,35 +15,111 @@ import {
   regex,
   str,
 } from "./commands";
+import { MemberConveter } from "./commands/converters/MemberConverter";
+import { MessageConverter } from "./commands/converters/MessageConverter";
+import {
+  StringArrayConverter,
+  StringConverter,
+} from "./commands/converters/StringConverter";
 import { Env } from "./env";
-import { endsWith, getFiles } from "./util";
+import { endsWith, getFiles, startsWith } from "./util";
+interface ConverterValue<T> {
+  value: Converter<T>;
+  array?: Converter<T[]>;
+}
+
+function converterNameFor(arg: ArgumentValue) {
+  if ("name" in arg) {
+    return arg.name;
+  }
+  if ("name" in arg[0]) {
+    return `[${arg[0].name}]`;
+  }
+  throw new Error("Can't get name from ArgumentValue.");
+}
 
 export class Bot extends discord.Client {
   private $env: Env;
-  private readonly $parsePrefix;
+  private readonly $parsePrefix: Parser<string>;
   private $parseCommand!: Parser<Command>;
   private $parseMention!: Parser<string>;
+  private $converters: Map<ArgumentValue, ConverterValue<unknown>> = new Map();
   commands: Command[] = [];
   constructor(env: Env) {
     super({
       allowedMentions: { repliedUser: true },
       presence: {
-        activity: { type: "WATCHING", name: "Netflix" },
+        activities: [{ type: "WATCHING", name: "Netflix" }],
       },
+      intents: Intents.ALL,
     });
+    this.addBasicConverters();
     this.$env = env;
     this.$parsePrefix = str(env.LAMB_PREFIX);
     this.loadCommands();
 
     super.on("message", this.handleMessage);
-    super.on("ready", this.onReady);
+    super.once("ready", this.onReady);
+  }
+
+  private addBasicConverters() {
+    this.addConverter(String, new StringConverter(this));
+    this.addArrayConverter(String, new StringArrayConverter(this));
+    this.addConverter(GuildMember, new MemberConveter(this));
+    this.addConverter(Message, new MessageConverter(this));
+  }
+  addArrayConverter<T>(arg: ArgumentValue, converter: Converter<T[]>) {
+    const value = this.$converters.get(arg);
+    if (!value) {
+      throw new Error(
+        `Can't define array converter for ${converterNameFor(
+          arg
+        )} if the base type is not defined.`
+      );
+    }
+    if (value.array) {
+      throw new Error(
+        `Converter for type ${converterNameFor(arg)} is already defined.`
+      );
+    }
+    value.array = converter;
+  }
+  addConverter<T>(arg: ArgumentValue, converter: Converter<T>) {
+    const value = this.$converters.get(arg);
+    if (value) {
+      throw new Error(
+        `Converter for type ${converterNameFor(arg)} is already defined.`
+      );
+    }
+    this.$converters.set(arg, { value: converter });
+  }
+
+  getConverter(cls: ArgumentValue): Converter<unknown> {
+    const constructor = Array.isArray(cls) ? cls[0] : cls;
+    const value = this.$converters.get(constructor);
+    if (!value) {
+      throw new Error(
+        `Converter for ${converterNameFor(cls)} is not defined defined!`
+      );
+    }
+    if (Array.isArray(cls)) {
+      if (value.array) {
+        return value.array;
+      } else {
+        throw new Error(
+          `Converter for ${converterNameFor(cls)} is not defined defined!`
+        );
+      }
+    } else {
+      return value.value;
+    }
   }
 
   async loadCommands() {
     const files = await getFiles(`${__dirname}/customCommands/`);
     const filtered = files
       .map((f) => f.path)
-      .filter((f) => endsWith(f, ".cmd.ts"));
+      .filter((f) => endsWith(f, ".cmd.ts") && !startsWith(f, "."));
 
     const modules = await Promise.all(filtered.map((x) => import(x)));
     const commands = modules
@@ -85,11 +164,12 @@ export class Bot extends discord.Client {
   }
 
   async handleMessage(message: Message) {
-    if (message.author.bot) {
+    if (message.author.bot || !message.guild) {
       return;
     }
     if (
-      [`<@${this.user?.id}>`, `<@!${this.user?.id}>`].includes(message.content)
+      `<@${this.user?.id}>` === message.content ||
+      `<@!${this.user?.id}>` === message.content
     ) {
       await message.reply("W ścianę.");
       return;
@@ -101,22 +181,43 @@ export class Bot extends discord.Client {
     if (!prefix.success) {
       return;
     }
-    const command = this.parseCommand(prefix.ctx);
+    const command = this.parseCommand(prefix.pctx);
     if (!command.success) {
       await message.reply("Unknown command!");
       return;
     }
     const ctx = new Context(this, message);
-    const validToExecute = await command.value.isExecutionValid(ctx);
+    const validToExecute = await command.value.checksValid(ctx);
     if (!validToExecute) {
       return;
     }
-    const args = command.value.parseArguments(command.ctx);
+
+    const args = command.value.parseArguments(ctx)(command.pctx);
     if (!args.success) {
-      await message.channel.send("Invalid argument");
+      console.log(args);
+      await message.channel.send("Invalid argument: " + args.expected);
       return;
     }
-    await command.value.invoke(ctx, ...args.value);
+    const argsValues = await Promise.all(args.value);
+    argsValues.map((value, idx) => {
+      const arg = command.value.arguments[idx];
+      if (
+        value instanceof ConverterError &&
+        "optional" in arg &&
+        arg.optional
+      ) {
+        return undefined;
+      }
+      return value;
+    });
+    const error = argsValues.find(
+      (value): value is ConverterError => value instanceof ConverterError
+    );
+    if (error) {
+      await ctx.reply(error.message);
+      return;
+    }
+    await command.value.invoke(ctx, ...argsValues);
   }
 
   login(): Promise<string> {
