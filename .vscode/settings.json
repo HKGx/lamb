@@ -1,7 +1,11 @@
 {
   "cSpell.userWords": [], // only use words from .cspell.json
   "cSpell.enabled": true,
+  "discord.detailsEditing": "Editing: {dir_name}\\{file_name} 🐏",
+  "discord.largeImage": "🐏",
+  "discord.lowerDetailsEditing": "🐑 🐏 🐑 🐏 🐑 🐏 ",
   "editor.formatOnSave": true,
   "typescript.tsdk": "node_modules/typescript/lib",
-  "typescript.enablePromptUseWorkspaceTsdk": true
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "FSharp.suggestGitignore": false
 }
