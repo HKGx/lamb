@@ -1,6 +1,11 @@
 import { config } from "dotenv";
 
-config();
+config({
+  path: ".lamb.env",
+});
+config({
+  path: ".mongo.env",
+});
 
 interface _Env {
   LAMB_MONGO_URL: string;
