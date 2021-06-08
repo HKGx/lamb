@@ -1,4 +1,5 @@
 import discord, { GuildMember, Intents, Message } from "discord.js";
+import { Logger } from "tslog";
 
 import {
   any,
@@ -23,6 +24,7 @@ import {
 } from "./commands/converters/StringConverter";
 import { Env } from "./env";
 import { endsWith, getFiles, startsWith } from "./util";
+
 interface ConverterValue<T> {
   value: Converter<T>;
   array?: Converter<T[]>;
@@ -40,6 +42,7 @@ function converterNameFor(arg: ArgumentValue) {
 
 export class Bot extends discord.Client {
   private $env: Env;
+  private readonly $logger: Logger;
   private readonly $parsePrefix: Parser<string>;
   private $parseCommand!: Parser<Command>;
   private $parseMention!: Parser<string>;
@@ -56,6 +59,10 @@ export class Bot extends discord.Client {
     this.addBasicConverters();
     this.$env = env;
     this.$parsePrefix = str(env.LAMB_PREFIX);
+    this.$logger = new Logger({
+      name: "lamb",
+      exposeErrorCodeFrameLinesBeforeAndAfter: 3,
+    });
     this.loadCommands();
 
     super.on("message", this.handleMessage);
@@ -133,7 +140,7 @@ export class Bot extends discord.Client {
         this.on("message", cmd.onMessage);
       }
     });
-    console.log(`Loaded ${commands.length} commands!`);
+    this.logger.info(`Loaded ${commands.length} commands!`);
     this.commands.push(...commands);
   }
 
@@ -147,7 +154,7 @@ export class Bot extends discord.Client {
 
   onReady() {
     const fullname = `${this.user?.username}#${this.user?.discriminator}`;
-    console.log(`LOGGED IN AS: ${fullname}`);
+    this.logger.info(`LOGGED IN AS: ${fullname}`);
   }
 
   public get parseMention(): Parser<string> {
@@ -194,7 +201,6 @@ export class Bot extends discord.Client {
 
     const args = command.value.parseArguments(ctx)(command.pctx);
     if (!args.success) {
-      console.log(args);
       await message.channel.send("Invalid argument: " + args.expected);
       return;
     }
@@ -217,7 +223,11 @@ export class Bot extends discord.Client {
       await ctx.reply(error.message);
       return;
     }
-    await command.value.invoke(ctx, ...argsValues);
+    try {
+      await command.value.invoke(ctx, ...argsValues);
+    } catch (error) {
+      this.logger.error(error);
+    }
   }
 
   login(): Promise<string> {
@@ -226,5 +236,9 @@ export class Bot extends discord.Client {
 
   public get ownerId(): string {
     return this.$env.LAMB_OWNER_ID;
+  }
+
+  public get logger(): Readonly<Logger> {
+    return this.$logger;
   }
 }
