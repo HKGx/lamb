@@ -1,4 +1,4 @@
-import { Message } from "discord.js";
+import { Message, Snowflake } from "discord.js";
 import { decode } from "js-base64";
 
 import { Bot, Command, Context, isOwner } from "../../commands";
@@ -6,7 +6,7 @@ import puzzleModel from "../../models/puzzle.model";
 import puzzleUserGuessModel from "../../models/puzzleUserGuess.model";
 
 export function puzzleCheck(ctx: Context) {
-  const roles = [
+  const roles: Snowflake[] = [
     "412193755286732800",
     "303943612784181248",
     "422408722107596811",
