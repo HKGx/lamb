@@ -207,17 +207,6 @@ export class Bot extends discord.Client {
       return;
     }
     const argsValues = await Promise.all(args.value);
-    argsValues.map((value, idx) => {
-      const arg = command.value.arguments[idx];
-      if (
-        value instanceof ConverterError &&
-        "optional" in arg &&
-        arg.optional
-      ) {
-        return undefined;
-      }
-      return value;
-    });
     const error = argsValues.find(
       (value): value is ConverterError => value instanceof ConverterError
     );
