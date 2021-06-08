@@ -46,8 +46,8 @@ export class Bot extends discord.Client {
   private readonly $parsePrefix: Parser<string>;
   private $parseCommand!: Parser<Command>;
   private $parseMention!: Parser<string>;
-  private $converters: Map<ArgumentValue, ConverterValue<unknown>> = new Map();
-  commands: Command[] = [];
+  private $converters: Map<ArgumentValue, ConverterValue<unknown>>;
+  private $commands: Command[];
   constructor(env: Env) {
     super({
       allowedMentions: { repliedUser: true },
@@ -56,6 +56,7 @@ export class Bot extends discord.Client {
       },
       intents: Intents.ALL,
     });
+    this.$converters = new Map();
     this.addBasicConverters();
     this.$env = env;
     this.$parsePrefix = str(env.LAMB_PREFIX);
@@ -63,6 +64,7 @@ export class Bot extends discord.Client {
       name: "lamb",
       exposeErrorCodeFrameLinesBeforeAndAfter: 3,
     });
+    this.$commands = [];
     this.loadCommands();
 
     super.on("message", this.handleMessage);
@@ -141,12 +143,12 @@ export class Bot extends discord.Client {
       }
     });
     this.logger.info(`Loaded ${commands.length} commands!`);
-    this.commands.push(...commands);
+    this.$commands.push(...commands);
   }
 
   get parseCommand() {
     if (!this.$parseCommand) {
-      const commandNameParsers = this.commands.map((c) => c.resolveCommand);
+      const commandNameParsers = this.$commands.map((c) => c.resolveCommand);
       this.$parseCommand = any(...commandNameParsers);
     }
     return this.$parseCommand;
