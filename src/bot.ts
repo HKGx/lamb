@@ -19,6 +19,11 @@ import {
 import { MemberConveter } from "./commands/converters/MemberConverter";
 import { MessageConverter } from "./commands/converters/MessageConverter";
 import {
+  FloatConverter,
+  Integer,
+  IntegerConverter,
+} from "./commands/converters/NumberConverter";
+import {
   StringArrayConverter,
   StringConverter,
 } from "./commands/converters/StringConverter";
@@ -72,6 +77,8 @@ export class Bot extends discord.Client {
   }
 
   private addBasicConverters() {
+    this.addConverter(Integer, new IntegerConverter(this));
+    this.addConverter(Number, new FloatConverter(this));
     this.addConverter(String, new StringConverter(this));
     this.addArrayConverter(String, new StringArrayConverter(this));
     this.addConverter(GuildMember, new MemberConveter(this));
